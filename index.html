@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Multi-AI</title>
+<style>
+:root{--fg:#fff;--muted:rgba(255,255,255,.72);--accent:#7cc4ff}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{color:var(--fg);font:15px/1.5 system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;height:100dvh;background:#0b1020;overflow:hidden}
+.bg{position:fixed;inset:0;z-index:-1;background:
+ radial-gradient(60vmax 60vmax at 12% 8%,#6d4aff,transparent 60%),
+ radial-gradient(55vmax 55vmax at 95% 25%,#00b8ff,transparent 55%),
+ radial-gradient(60vmax 60vmax at 65% 100%,#ff4fa3,transparent 55%),#0b1020;animation:hue 24s ease-in-out infinite alternate}
+@keyframes hue{to{filter:hue-rotate(45deg)}}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+/* ---- liquid glass ---- */
+.glass{background:linear-gradient(135deg,rgba(255,255,255,.24),rgba(255,255,255,.07));
+ -webkit-backdrop-filter:blur(22px) saturate(175%);backdrop-filter:blur(22px) saturate(175%);
+ border:1px solid rgba(255,255,255,.28);
+ box-shadow:inset 0 1.5px 1px rgba(255,255,255,.6),inset 0 -1px 1px rgba(255,255,255,.12),0 10px 30px rgba(0,0,0,.28)}
+header{display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top) + 8px) 12px 6px}
+.ic{width:42px;height:42px;border-radius:50%;display:grid;place-items:center}
+.title{padding:8px 18px;border-radius:99px;font-weight:600;font-size:14px}
+#main{flex:1;overflow-y:auto;padding:8px 14px 16px}
+.col{max-width:1100px;margin:0 auto}
+.hello{text-align:center;margin-top:20vh}
+.hello h2{font-size:clamp(34px,8vw,56px);font-weight:700;margin:0;letter-spacing:-.02em;text-shadow:0 4px 30px rgba(0,0,0,.3)}
+.hello p{color:var(--muted);margin:8px 0 0}
+.turn{margin-bottom:26px}
+.user{margin:0 0 12px auto;width:fit-content;max-width:86%;padding:10px 14px;border-radius:22px;white-space:pre-wrap;word-break:break-word}
+.user .ats{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.user img{height:70px;border-radius:12px}
+.pdf{display:inline-flex;gap:6px;align-items:center;font-size:12px;padding:5px 10px;border-radius:99px;background:rgba(255,255,255,.18);max-width:200px}
+.pdf span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.resp{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:820px){.resp{grid-template-columns:repeat(auto-fit,minmax(0,1fr))}}
+.card{border-radius:24px;padding:14px 16px;min-width:0;display:flex;flex-direction:column}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.card h3{margin:0;font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;box-shadow:0 0 10px currentColor}
+.meta{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--muted)}
+.st{padding:1px 9px;border-radius:99px;background:rgba(255,255,255,.18)}
+.st.run{animation:pl 1.2s infinite}.st.ok{background:rgba(80,220,140,.3)}.st.bad{background:rgba(255,80,90,.4);font-weight:600}
+@keyframes pl{50%{opacity:.5}}
+.txt{font-size:15.5px;line-height:1.65;white-space:pre-wrap;word-break:break-word;min-height:24px}
+.wait{color:var(--muted)}
+.err{margin-top:8px;padding:8px 10px;border-radius:12px;background:rgba(255,80,90,.3);font-size:13px}
+.act{margin-top:8px}
+.act button{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--muted);padding:5px 10px;border-radius:99px}
+.act button:disabled{opacity:.4}.act svg{width:15px;height:15px}
+/* ---- composer ---- */
+.composer{padding:4px 12px calc(env(safe-area-inset-bottom) + 10px);position:relative}
+.box{max-width:760px;margin:0 auto;border-radius:30px;padding:12px 12px 10px 14px}
+#atts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+#atts:empty{display:none}
+.at{position:relative}
+.at img{height:54px;border-radius:12px;display:block}
+.at .x{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.65);font-size:13px;line-height:20px;text-align:center}
+.at.p{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:99px;background:rgba(255,255,255,.18);font-size:12px;max-width:180px}
+.at.p span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.at.p .x{position:static;flex:none}
+textarea{width:100%;border:0;outline:0;resize:none;background:none;color:var(--fg);font:16px/1.5 system-ui,sans-serif;max-height:150px;padding:2px 4px}
+textarea::placeholder{color:rgba(255,255,255,.6)}
+.tools{display:flex;align-items:center;gap:8px;margin-top:6px}
+.plus{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex:none}
+.chips{display:flex;flex:1;flex-wrap:wrap;gap:6px}
+.chip{display:flex;align-items:center;gap:6px;font-size:12.5px;padding:5px 10px;border-radius:99px;border:1px solid rgba(255,255,255,.22);color:var(--muted)}
+.chip[aria-pressed=true]{color:#fff;background:rgba(255,255,255,.22)}
+.send{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;flex:none;background:linear-gradient(135deg,#7cc4ff,#a78bfa);color:#0b1020;box-shadow:inset 0 1px 1px rgba(255,255,255,.7),0 6px 16px rgba(124,196,255,.4)}
+.send:disabled{opacity:.4;cursor:not-allowed}
+#menu{position:absolute;left:calc(50% - 380px + 14px);bottom:calc(100% - 6px);min-width:200px;border-radius:22px;padding:6px;display:none}
+@media(max-width:790px){#menu{left:20px}}
+#menu.open{display:block}
+#menu button{display:flex;gap:12px;align-items:center;width:100%;padding:11px 14px;border-radius:16px;font-size:15px;text-align:left}
+#menu button:active,#menu button:hover{background:rgba(255,255,255,.2)}
+#listen{display:none;position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% + 4px);padding:8px 16px;border-radius:99px;font-size:13px;align-items:center;gap:8px;white-space:nowrap}
+#listen.on{display:flex}
+#listen i{width:9px;height:9px;border-radius:50%;background:#ff4d5e;animation:pl 1s infinite}
+#toast{position:fixed;top:calc(env(safe-area-inset-top) + 64px);left:50%;transform:translate(-50%,-20px);padding:10px 18px;border-radius:99px;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:20;max-width:90vw}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.foot{text-align:center;color:rgba(255,255,255,.5);font-size:11px;margin-top:6px}
+dialog{border:0;border-radius:26px;color:#fff;padding:18px;width:min(92vw,420px);background:rgba(30,30,60,.55);-webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%);box-shadow:inset 0 1px 1px rgba(255,255,255,.5),0 20px 60px rgba(0,0,0,.5)}
+dialog::backdrop{background:rgba(0,0,0,.35);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+dialog h3{margin:0 0 4px}dialog p{color:var(--muted);font-size:12px}
+dialog input{width:100%;margin-top:8px;padding:11px 14px;border:1px solid rgba(255,255,255,.25);border-radius:14px;background:rgba(255,255,255,.12);color:#fff;font:15px system-ui;outline:0}
+dialog .done{margin-top:12px;float:right;padding:9px 18px;border-radius:99px;background:linear-gradient(135deg,#7cc4ff,#a78bfa);color:#0b1020;font-weight:600}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<header>
+  <button class="ic glass" id="keys" aria-label="API keys"><svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3"/></svg></button>
+  <div class="title glass">Multi-AI</div>
+  <button class="ic glass" id="new" aria-label="New chat"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+</header>
+
+<div id="main"><div class="col" id="chat"></div></div>
+
+<div class="composer">
+  <div id="menu" class="glass">
+    <button data-a="image"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 9"/></svg>Photo</button>
+    <button data-a="pdf"><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>PDF</button>
+    <button data-a="voice"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Voice</button>
+  </div>
+  <div id="listen" class="glass"><i></i>Listening… <button id="stopListen" style="text-decoration:underline">Stop</button></div>
+  <div class="box glass">
+    <div id="atts"></div>
+    <textarea id="prompt" rows="1" maxlength="8000" placeholder="Ask all models…"></textarea>
+    <div class="tools">
+      <button class="plus glass" id="plus" aria-label="Add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      <div class="chips" id="models"></div>
+      <button class="send" id="send" aria-label="Send"></button>
+    </div>
+  </div>
+  <div class="foot">AI answers can be wrong. Compare before you rely on them.</div>
+</div>
+<div id="toast" class="glass"></div>
+<input type="file" id="fImg" accept="image/*" hidden>
+<input type="file" id="fPdf" accept="application/pdf" hidden>
+
+<dialog id="dlg">
+  <h3>API keys</h3>
+  <p>Saved only in this browser. Calls go directly to each provider. Use low-limit keys. "Mock (test)" needs no key: type [fail] for an error, [slow] for a timeout.</p>
+  <input type="password" id="k-gemini" placeholder="Gemini API key" autocomplete="off">
+  <input type="password" id="k-gpt" placeholder="OpenAI API key" autocomplete="off">
+  <input type="password" id="k-groq" placeholder="Groq API key" autocomplete="off">
+  <button class="done" id="close">Done</button>
+</dialog>
+
+<script>
+"use strict";
+const TIMEOUT_MS = 15000; // max silence per model (first token + gaps)
+const MAX_FILE = 8 * 1024 * 1024, MAX_FILES = 4;
+const MODEL_IDS = { gemini: "gemini-2.5-flash", gpt: "gpt-4o-mini", groq: "llama-3.3-70b-versatile", groqVision: "meta-llama/llama-4-scout-17b-16e-instruct" };
+// Fallbacks: if a model returns 404/400 the next one is tried automatically
+const FALLBACKS = {
+  gemini: ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest", "gemini-2.5-flash-lite"],
+  groq: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "openai/gpt-oss-20b"],
+  groqVision: ["meta-llama/llama-4-scout-17b-16e-instruct", "meta-llama/llama-4-maverick-17b-128e-instruct"],
+};
+const MODELS = [
+  { id: "gemini", label: "Gemini", color: "#6ea8ff" },
+  { id: "gpt", label: "GPT-4o mini", color: "#4be3b0" },
+  { id: "groq", label: "Groq Llama", color: "#ff8a6b" },
+  { id: "mock", label: "Mock (test)", color: "#c8ccd4" },
+];
+const $ = (s) => document.querySelector(s);
+const store = {
+  get(k) { try { return localStorage.getItem(k) || ""; } catch { return ""; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+const I = {
+  send: '<svg viewBox="0 0 24 24" style="stroke-width:2.6"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
+  stop: '<svg viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><rect x="6" y="6" width="12" height="12" rx="2.5"/></svg>',
+  copy: '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>',
+};
+const HELLO = '<div class="hello" id="hello"><h2>Are you ready?</h2><p>Ask once. Compare every answer.</p></div>';
+$("#chat").innerHTML = HELLO;
+
+class AppError extends Error {}
+const httpErr = (s) => new AppError(
+  s === 401 || s === 403 ? "Invalid or unauthorized API key."
+  : s === 429 ? "Rate limit reached (429)."
+  : s >= 500 ? "Provider temporarily unavailable." : "Model unavailable (" + s + ").");
+async function apiErr(r) {
+  let m = ""; try { const j = await r.clone().json(); m = (j.error?.message || j.message || "").toString(); } catch {}
+  const e = httpErr(r.status);
+  if (m && ![401, 403, 429].includes(r.status) && r.status < 500) e.message += " " + m.slice(0, 160);
+  else if (m && (r.status === 401 || r.status === 403)) e.message += " " + m.slice(0, 120);
+  return e;
+}
+function toast(t) {
+  const e = $("#toast"); e.textContent = t; e.classList.add("show");
+  clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove("show"), 3200);
+}
+
+// ---------- model chips, keys ----------
+const selected = new Set(["gemini", "gpt", "groq"]);
+$("#models").innerHTML = MODELS.map((m) =>
+  `<button class="chip" data-id="${m.id}" aria-pressed="${selected.has(m.id)}"><span class="dot" style="background:${m.color};color:${m.color}"></span>${m.label}</button>`).join("");
+$("#models").addEventListener("click", (e) => {
+  const b = e.target.closest(".chip"); if (!b || running) return;
+  const id = b.dataset.id;
+  selected.has(id) ? selected.delete(id) : selected.add(id);
+  b.setAttribute("aria-pressed", selected.has(id)); updateSend();
+});
+// One-time setup link: page#gemini=KEY&groq=KEY -> saved in this browser, then removed from the URL
+try {
+  const hp = new URLSearchParams(location.hash.slice(1));
+  let got = false;
+  for (const id of ["gemini", "gpt", "groq"]) if (hp.get(id)) { store.set("key-" + id, hp.get(id).trim()); got = true; }
+  if (got) history.replaceState(null, "", location.pathname + location.search);
+} catch {}
+for (const id of ["gemini", "gpt", "groq"]) {
+  const el = $("#k-" + id); el.value = store.get("key-" + id);
+  el.addEventListener("input", () => store.set("key-" + id, el.value.trim()));
+}
+$("#keys").onclick = () => $("#dlg").showModal();
+$("#close").onclick = () => $("#dlg").close();
+const ta = $("#prompt");
+const autosize = () => { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; };
+ta.addEventListener("input", () => { autosize(); updateSend(); });
+ta.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && matchMedia("(hover:hover)").matches) { e.preventDefault(); onSend(); } });
+
+// ---------- + menu: photo / PDF / voice ----------
+const files = [];
+$("#plus").onclick = (e) => { e.stopPropagation(); $("#menu").classList.toggle("open"); };
+document.addEventListener("click", () => $("#menu").classList.remove("open"));
+$("#menu").addEventListener("click", (e) => {
+  const a = e.target.closest("button")?.dataset.a; if (!a) return;
+  if (a === "image") $("#fImg").click();
+  if (a === "pdf") $("#fPdf").click();
+  if (a === "voice") toggleVoice();
+});
+async function addFile(f, kind) {
+  if (!f) return;
+  if (files.length >= MAX_FILES) return toast("Max " + MAX_FILES + " files.");
+  if (f.size > MAX_FILE) return toast("File too large (max 8 MB).");
+  const dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
+  files.push({ kind, name: f.name, mime: f.type || (kind === "pdf" ? "application/pdf" : "image/jpeg"), dataUrl, b64: dataUrl.split(",")[1] });
+  renderAtts(); updateSend();
+}
+$("#fImg").onchange = (e) => { addFile(e.target.files[0], "image"); e.target.value = ""; };
+$("#fPdf").onchange = (e) => { addFile(e.target.files[0], "pdf"); e.target.value = ""; };
+function attNode(a, removable, i) {
+  const d = document.createElement("div");
+  if (a.kind === "image") { d.className = "at"; const im = new Image(); im.src = a.dataUrl; d.append(im); }
+  else { d.className = "at p"; const s = document.createElement("span"); s.textContent = "PDF · " + a.name; d.append(s); }
+  if (removable) { const x = document.createElement("button"); x.className = "x"; x.textContent = "×"; x.onclick = () => { files.splice(i, 1); renderAtts(); updateSend(); }; d.append(x); }
+  return d;
+}
+function renderAtts() { const box = $("#atts"); box.replaceChildren(...files.map((a, i) => attNode(a, true, i))); }
+
+// Voice = speech-to-text typed into the prompt box (works with every model)
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null;
+function toggleVoice() {
+  if (rec) return rec.stop();
+  if (!SR) return toast("Voice typing isn't supported in this browser. Try Chrome or Safari.");
+  rec = new SR(); rec.lang = navigator.language || "en-US"; rec.interimResults = true; rec.continuous = true;
+  const base = ta.value ? ta.value + " " : "";
+  rec.onresult = (e) => { let t = ""; for (const r of e.results) t += r[0].transcript; ta.value = base + t; autosize(); updateSend(); };
+  rec.onerror = (e) => toast(e.error === "not-allowed" ? "Microphone permission denied." : "Voice error: " + e.error);
+  rec.onend = () => { rec = null; $("#listen").classList.remove("on"); };
+  try { rec.start(); $("#listen").classList.add("on"); } catch { rec = null; }
+}
+$("#stopListen").onclick = () => rec?.stop();
+
+// ---------- SSE + providers ----------
+async function* sseData(res, bump) {
+  const reader = res.body.getReader(), dec = new TextDecoder();
+  let buf = "";
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    bump();
+    buf += dec.decode(value, { stream: true }); // keeps multi-byte chars intact
+    const lines = buf.split("\n"); buf = lines.pop(); // last piece may be partial
+    for (const l of lines) {
+      if (!l.startsWith("data:")) continue;
+      const d = l.slice(5).trim();
+      if (d && d !== "[DONE]") { try { yield JSON.parse(d); } catch {} }
+    }
+  }
+}
+const NOKEY = "API key missing. Tap the key icon to add it.";
+async function* openaiLike(url, key, models, prompt, atts, signal, bump, canPdf) {
+  if (!key) throw new AppError(NOKEY);
+  if (!canPdf && atts.some((a) => a.kind === "pdf")) throw new AppError("This model can't read PDFs. Deselect it or remove the PDF.");
+  const content = atts.length ? [{ type: "text", text: prompt }, ...atts.map((a) => a.kind === "image"
+    ? { type: "image_url", image_url: { url: a.dataUrl } }
+    : { type: "file", file: { filename: a.name, file_data: a.dataUrl } })] : prompt;
+  models = [].concat(models);
+  let r, last;
+  for (const model of models) {
+    r = await fetch(url, { method: "POST", signal,
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + key },
+      body: JSON.stringify({ model, stream: true, messages: [{ role: "user", content }] }) });
+    if (r.ok) break;
+    last = await apiErr(r);
+    if (![400, 404].includes(r.status)) throw last;
+  }
+  if (!r.ok) throw last;
+  for await (const j of sseData(r, bump)) { const t = j.choices?.[0]?.delta?.content; if (t) yield t; }
+}
+const providers = {
+  gpt: (p, k, a, s, b) => openaiLike("https://api.openai.com/v1/chat/completions", k, [MODEL_IDS.gpt, "gpt-4.1-mini"], p, a, s, b, true),
+  groq: (p, k, a, s, b) => openaiLike("https://api.groq.com/openai/v1/chat/completions", k,
+    a.some((x) => x.kind === "image") ? FALLBACKS.groqVision : FALLBACKS.groq, p, a, s, b, false),
+  async *gemini(prompt, key, atts, signal, bump) {
+    if (!key) throw new AppError(NOKEY);
+    const parts = [{ text: prompt }, ...atts.map((a) => ({ inlineData: { mimeType: a.mime, data: a.b64 } }))];
+    const body = JSON.stringify({ contents: [{ role: "user", parts }] });
+    // Standard Gemini API first; Vertex AI "express" endpoint as fallback (keys starting with "AQ.")
+    const vertexFirst = key.startsWith("AQ.");
+    const endpoints = (m) => {
+      const g = [`https://generativelanguage.googleapis.com/v1beta/models/${m}:streamGenerateContent?alt=sse`, { "x-goog-api-key": key }];
+      const v = [`https://aiplatform.googleapis.com/v1/publishers/google/models/${m}:streamGenerateContent?alt=sse&key=${encodeURIComponent(key)}`, {}];
+      return vertexFirst ? [v, g] : [g, v];
+    };
+    let r, last;
+    outer: for (const m of FALLBACKS.gemini) {
+      for (const [url, h] of endpoints(m)) {
+        try { r = await fetch(url, { method: "POST", signal, headers: { "Content-Type": "application/json", ...h }, body }); }
+        catch (e) { if (signal.aborted) throw e; continue; }
+        if (r.ok) break outer;
+        last = await apiErr(r);
+        if (r.status === 429 || r.status >= 500) throw last;
+      }
+    }
+    if (!r || !r.ok) throw last || new AppError("Network or CORS error. Check your connection.");
+    for await (const j of sseData(r, bump)) {
+      const t = (j.candidates?.[0]?.content?.parts || []).map((x) => x.text || "").join("");
+      if (t) yield t;
+    }
+  },
+  async *mock(prompt, _k, atts, signal, bump) {
+    if (prompt.includes("[fail]")) throw new AppError("Model unavailable (mock).");
+    if (prompt.includes("[slow]")) await new Promise((_, rej) => signal.addEventListener("abort", () => rej(new DOMException("a", "AbortError"))));
+    const extra = atts.length ? ` (with ${atts.length} attachment${atts.length > 1 ? "s" : ""})` : "";
+    for (const w of ("Mock answer to: " + prompt + extra).split(/\s+/)) { await new Promise((r) => setTimeout(r, 60)); bump(); yield w + " "; }
+  },
+};
+
+// ---------- cards ----------
+function makeCard(m) {
+  const el = document.createElement("section");
+  el.className = "card glass";
+  el.innerHTML = `<div class="top"><h3><span class="dot" style="background:${m.color};color:${m.color}"></span>${m.label}</h3>
+    <div class="meta"><span class="lat">0.0s</span><span class="st run">Streaming</span></div></div>
+    <div class="txt"><span class="wait">Thinking…</span></div>
+    <div class="act"><button class="copy" disabled>${I.copy}<span>Copy</span></button></div>`;
+  const q = (s) => el.querySelector(s);
+  const c = { el, text: "", start: performance.now(), running: true, lat: q(".lat"), st: q(".st"), txt: q(".txt"), copy: q(".copy") };
+  c.copy.onclick = async () => {
+    try { await navigator.clipboard.writeText(c.text); }
+    catch { const t = document.createElement("textarea"); t.value = c.text; document.body.append(t); t.select(); document.execCommand("copy"); t.remove(); }
+    const s = c.copy.querySelector("span"); s.textContent = "Copied"; setTimeout(() => (s.textContent = "Copy"), 1500);
+  };
+  return c;
+}
+function finish(c, kind, label, error) {
+  c.running = false;
+  c.lat.textContent = ((performance.now() - c.start) / 1000).toFixed(1) + "s";
+  c.st.className = "st " + kind; c.st.textContent = label;
+  if (!c.text) c.txt.innerHTML = "";
+  if (error) { const d = document.createElement("div"); d.className = "err"; d.textContent = error; c.el.insertBefore(d, c.el.querySelector(".act")); }
+}
+const main = $("#main");
+const stick = () => { if (main.scrollHeight - main.scrollTop - main.clientHeight < 140) main.scrollTop = main.scrollHeight; };
+
+// One model; never throws, so one failure can't break the others
+async function runModel(m, prompt, atts, globalSignal, holder) {
+  const c = makeCard(m); holder.append(c.el);
+  const ctrl = new AbortController();
+  globalSignal.addEventListener("abort", () => ctrl.abort());
+  let timedOut = false, timer;
+  const bump = () => { clearTimeout(timer); timer = setTimeout(() => { timedOut = true; ctrl.abort(); }, TIMEOUT_MS); };
+  bump();
+  const tick = setInterval(() => { if (c.running) c.lat.textContent = ((performance.now() - c.start) / 1000).toFixed(1) + "s"; }, 100);
+  try {
+    const key = m.id === "mock" ? "" : store.get("key-" + m.id);
+    for await (const chunk of providers[m.id](prompt, key, atts, ctrl.signal, bump)) {
+      if (!c.text) c.txt.innerHTML = "";
+      c.text += chunk; c.txt.textContent = c.text; c.copy.disabled = false; stick();
+    }
+    c.text.trim() ? finish(c, "ok", "Done") : finish(c, "bad", "Unavailable", "Empty or blocked response.");
+  } catch (e) {
+    if (timedOut) finish(c, "bad", "Timeout", "Timed out after " + TIMEOUT_MS / 1000 + "s.");
+    else if (globalSignal.aborted) finish(c, "", "Stopped");
+    else if (e instanceof AppError) finish(c, "bad", /429|Rate/.test(e.message) ? "Rate limited" : "Unavailable", e.message);
+    else finish(c, "bad", "Unavailable", "Network or CORS error. Check your connection.");
+  } finally { clearTimeout(timer); clearInterval(tick); }
+}
+
+// ---------- send / stop / new ----------
+let master = null, running = false;
+function updateSend() {
+  const b = $("#send"); b.innerHTML = running ? I.stop : I.send;
+  b.disabled = !running && !((ta.value.trim() || files.length) && selected.size);
+}
+async function onSend() {
+  if (running) return master?.abort();
+  rec?.stop();
+  const atts = files.splice(0);
+  const prompt = ta.value.trim() || (atts.length ? "Please describe or summarize the attached file(s)." : "");
+  const ids = MODELS.filter((m) => selected.has(m.id));
+  if (!prompt || !ids.length) return;
+  $("#hello")?.remove();
+  const turn = document.createElement("div"); turn.className = "turn";
+  const u = document.createElement("div"); u.className = "user glass";
+  if (atts.length) { const w = document.createElement("div"); w.className = "ats"; atts.forEach((a) => { const n = attNode(a, false); n.className = a.kind === "image" ? "" : "pdf"; w.append(n); }); u.append(w); }
+  u.append(document.createTextNode(prompt));
+  const holder = document.createElement("div"); holder.className = "resp";
+  turn.append(u, holder); $("#chat").append(turn);
+  ta.value = ""; autosize(); renderAtts();
+  master = new AbortController(); running = true; updateSend();
+  main.scrollTop = main.scrollHeight;
+  await Promise.all(ids.map((m) => runModel(m, prompt, atts, master.signal, holder))); // parallel
+  running = false; updateSend();
+}
+$("#send").onclick = onSend;
+$("#new").onclick = () => {
+  master?.abort(); rec?.stop(); files.length = 0; renderAtts();
+  $("#chat").innerHTML = HELLO; running = false; updateSend(); ta.focus();
+};
+updateSend();
+</script>
+</body>
+</html>
